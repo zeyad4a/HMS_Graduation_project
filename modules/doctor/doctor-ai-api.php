@@ -9,6 +9,18 @@ if (empty($_SESSION['login']) || ($_SESSION['role'] ?? '') !== 'Doctor') {
     exit();
 }
 
+$now = time();
+$_SESSION['ai_rate_limit'] = array_values(array_filter(
+    $_SESSION['ai_rate_limit'] ?? [],
+    static fn($attemptTime) => is_int($attemptTime) && ($now - $attemptTime) < 60
+));
+if (count($_SESSION['ai_rate_limit']) >= 20) {
+    http_response_code(429);
+    echo json_encode(['error' => 'Too many AI requests. Please try again shortly.'], JSON_UNESCAPED_UNICODE);
+    exit();
+}
+$_SESSION['ai_rate_limit'][] = $now;
+
 $inputRaw = file_get_contents('php://input');
 $input = json_decode($inputRaw, true);
 $action = $input['action'] ?? '';
@@ -19,7 +31,12 @@ if (!$input || !$action) {
     exit();
 }
 
-$apiKey = getenv('OPENAI_API_KEY') ?: 'YOUR_OPENAI_API_KEY';
+$apiKey = getenv('OPENAI_API_KEY');
+if (!$apiKey) {
+    http_response_code(500);
+    echo json_encode(['error' => 'AI service is not configured'], JSON_UNESCAPED_UNICODE);
+    exit();
+}
 $url = 'https://api.openai.com/v1/chat/completions';
 
 // ── Action: generate_visit_note ──────────────────────────────────────────────
@@ -93,12 +110,13 @@ if ($action === 'summarize_history') {
         exit();
     }
 
-    $connect = new mysqli('localhost', 'root', '', 'hms');
-    if ($connect->connect_error) {
+    define('HMS_SKIP_AUTO_CONNECT', true);
+    require_once __DIR__ . '/../../includes/config.php';
+    $connect = hms_db_connect(false);
+    if (!$connect) {
         echo json_encode(['error' => 'DB Connection Error'], JSON_UNESCAPED_UNICODE);
         exit();
     }
-    $connect->set_charset('utf8mb4');
 
     $doctorId = (int)($_SESSION['id'] ?? 0);
     $accessStmt = $connect->prepare("SELECT apid FROM appointment WHERE userId = ? AND doctorId = ? LIMIT 1");

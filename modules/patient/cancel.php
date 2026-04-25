@@ -1,13 +1,14 @@
 <?php
 require_once __DIR__ . '/../../includes/auth.php';
 
-$connect = new mysqli("localhost", "root", "", "hms");
-if ($connect->connect_error) die("Connection failed");
+$connect = hms_db_connect();
 
 require_once __DIR__ . '/../../includes/notification-api.php';
 
 $apid = intval($_GET['id'] ?? 0);
 $uid  = $_SESSION['uid'];
+
+hms_require_csrf('./Medical-Record.php');
 
 // تأكد إن الحجز ده بتاع المريض ده فعلاً
 $stmt = $connect->prepare("SELECT apid, userStatus, doctorId, patient_Name, appointmentDate, appointmentTime FROM appointment WHERE apid=? AND userId=?");
@@ -53,7 +54,7 @@ if ($update->execute()) {
     $staffStmt = $connect->prepare("SELECT id, role FROM employ WHERE role IN ('User', 'Admin', 'System Admin')");
     $staffStmt->execute();
     $staffRes = $staffStmt->get_result();
-    while ($emp = $empRes->fetch_assoc()) {
+    while ($emp = $staffRes->fetch_assoc()) {
         $notifEmp = hms_create_notification($connect, [
             'recipient_type' => 'employee',
             'recipient_id' => (int)$emp['id'],

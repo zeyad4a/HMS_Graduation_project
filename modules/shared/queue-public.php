@@ -3,10 +3,11 @@
  * Public Queue Viewer — Mobile-friendly page for patients to check their queue position.
  * No login required. Accessible via QR code on the Queue Screen.
  */
+define('HMS_SKIP_AUTO_CONNECT', true);
 require_once __DIR__ . '/../../includes/config.php';
 date_default_timezone_set('Africa/Cairo');
 
-$connect = new mysqli("localhost", "root", "", "hms");
+$connect = hms_db_connect();
 if ($connect->connect_error) {
     die("Connection failed");
 }

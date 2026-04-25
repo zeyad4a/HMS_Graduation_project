@@ -1,6 +1,8 @@
 <?php
 session_start();
-$connect = new mysqli("localhost", "root", "", "hms");
+define('HMS_SKIP_AUTO_CONNECT', true);
+require_once __DIR__ . '/../../includes/config.php';
+$connect = hms_db_connect();
 if ($connect->connect_error) {
     die("Connection failed: " . $connect->connect_error);
 }

@@ -8,7 +8,7 @@ require_once __DIR__ . '/../../includes/notification-api.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-$conn = new mysqli("localhost", "root", "", "hms");
+$conn = hms_db_connect();
 if ($conn->connect_error) {
     echo json_encode(['success' => false, 'message' => 'DB connection failed']);
     exit;

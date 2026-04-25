@@ -3,12 +3,14 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/appointment-helpers.php';
 
 ini_set("display_errors", 0);
-$connect = new mysqli("localhost", "root", "", "hms");
+$connect = hms_db_connect();
 if ($connect->connect_error) {
     die("Connection failed: " . $connect->connect_error);
 }
 
 if (isset($_GET['cancel'], $_GET['id'])) {
+    hms_require_csrf('./calender.php');
+
     require_once __DIR__ . '/../../includes/notification-api.php';
     $apid = (int)$_GET['id'];
     $uid = (int)($_SESSION['uid'] ?? 0);
@@ -129,7 +131,7 @@ if (isset($_GET['cancel'], $_GET['id'])) {
                                         <?php if ((int)$row['doctorStatus'] === 2): ?>
                                             <button class="text-lg inline-flex items-center rounded-md bg-green-50 px-2 py-1 font-medium text-red-700 ring-1 ring-inset ring-red-600/20">Cancel</button>
                                         <?php elseif ((int)$row['userStatus'] === 1 && (int)$row['doctorStatus'] === 1): ?>
-                                            <a href="./calender.php?id=<?php echo (int)$row['apid']; ?>&cancel=update" onClick="return confirm('Are you sure you want to cancel this appointment?');" class="text-lg inline-flex items-center rounded-md bg-green-50 px-2 py-1 font-medium text-red-700 ring-1 ring-inset ring-red-600/20">Cancel</a>
+                                            <a href="./calender.php?id=<?php echo (int)$row['apid']; ?>&cancel=update&<?= hms_csrf_query() ?>" onClick="return confirm('Are you sure you want to cancel this appointment?');" class="text-lg inline-flex items-center rounded-md bg-green-50 px-2 py-1 font-medium text-red-700 ring-1 ring-inset ring-red-600/20">Cancel</a>
                                         <?php elseif ((int)$row['userStatus'] === 0 || (int)$row['doctorStatus'] === 0): ?>
                                             <span class="text-lg inline-flex items-center rounded-md bg-green-50 px-2 py-1 font-medium text-red-700 ring-1 ring-inset ring-red-600/20">Cancelled</span>
                                         <?php endif; ?>

@@ -1,5 +1,7 @@
 <?php
 session_start();
+define('HMS_SKIP_AUTO_CONNECT', true);
+require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/audit.php';
 
 // لو مش عامل login، رجعه للصفحة الرئيسية مباشرة
@@ -8,9 +10,9 @@ if (!isset($_SESSION['login']) || $_SESSION['login'] === '') {
     exit;
     }
 
-$connect = new mysqli("localhost", "root", "", "hms");
+$connect = hms_db_connect(false);
 
-if (!$connect->connect_error) {
+if ($connect) {
     hms_audit_log($connect, 'auth.logout', [
         'entity_type' => 'auth',
         'entity_id' => strtolower(str_replace(' ', '-', $_SESSION['role'] ?? 'guest')),

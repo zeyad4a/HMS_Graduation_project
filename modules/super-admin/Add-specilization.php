@@ -3,21 +3,20 @@ require_once __DIR__ . '/../../includes/auth.php';
 ini_set("display_errors", 0);
 
 if (isset($_POST['Add'])) {
-    $name = $_POST['name'];
+    hms_require_csrf('/modules/super-admin/Add-specilization.php');
 
-    $connect = new mysqli("localhost", "root", "", "hms");
-    if ($connect->connect_error) {
-        die("Connection failed: " . $connect->connect_error);
-    }
+    $name = trim($_POST['name'] ?? '');
+    $connect = hms_db_connect();
 
-    $sql_r = "insert into doctorspecilization  
-      (`specilization`) value ('$name' )";
+    $stmt = $connect->prepare("INSERT INTO doctorspecilization (`specilization`) VALUES (?)");
+    $stmt->bind_param("s", $name);
 
-    if ($connect->query($sql_r) === TRUE) {
+    if ($stmt->execute()) {
         echo "<script>alert('Specialization Added Successfully');</script>";
     } else {
         echo "<script>alert('Something Wrong ');</script>";
     }
+    $stmt->close();
     $connect->close();
 }
 
@@ -54,6 +53,7 @@ if (isset($_POST['Add'])) {
             <div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
 
                 <form action="#" method="POST" class="mx-auto max-w-xl sm:mt-20">
+                    <?= hms_csrf_field() ?>
                     <div class="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
                         <div class="sm:col-span-2">
                             <label for="name" class="block text-sm font-semibold leading-6 text-gray-900">Specialization name</label>

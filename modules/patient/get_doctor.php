@@ -1,14 +1,17 @@
 <?php
-session_start();
+require_once __DIR__ . '/../../includes/auth.php';
 
-$conn = new mysqli("localhost", "root", "", "hms");
-if ($conn->connect_error) {
-  die("Database connection failed: " . $conn->connect_error);
+$conn = hms_db_connect(false);
+if (!$conn) {
+  die("Database connection failed");
 }
 
 if (!empty($_POST["specilizationid"])) {
-  $spec = $conn->real_escape_string($_POST['specilizationid']);
-  $sql = mysqli_query($conn, "SELECT doctorName, id, docFees FROM doctors WHERE specilization='" . $spec . "'");
+  $spec = trim($_POST['specilizationid']);
+  $stmt = $conn->prepare("SELECT doctorName, id, docFees FROM doctors WHERE specilization = ?");
+  $stmt->bind_param("s", $spec);
+  $stmt->execute();
+  $sql = $stmt->get_result();
 
   // Determine today's day_of_week for the schedule system (0=Saturday...6=Friday)
   date_default_timezone_set('Africa/Cairo');
@@ -58,7 +61,10 @@ if (!empty($_POST["specilizationid"])) {
 
 if (!empty($_POST["doctor"])) {
   $doctorId = intval($_POST['doctor']);
-  $sql = mysqli_query($conn, "SELECT docFees FROM doctors WHERE id='" . $doctorId . "'");
+  $stmt = $conn->prepare("SELECT docFees FROM doctors WHERE id = ?");
+  $stmt->bind_param("i", $doctorId);
+  $stmt->execute();
+  $sql = $stmt->get_result();
   while ($row = mysqli_fetch_array($sql)) { ?>
     <option value="<?php echo htmlentities($row['docFees']); ?>"><?php echo htmlentities($row['docFees']); ?></option>
 <?php

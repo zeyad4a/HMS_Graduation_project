@@ -8,7 +8,7 @@ if (!in_array($role, ['Admin', 'System Admin'], true)) {
     exit();
 }
 
-$connect = new mysqli("localhost", "root", "", "hms");
+$connect = hms_db_connect();
 if ($connect->connect_error) {
     die("Connection failed: " . $connect->connect_error);
 }

@@ -9,6 +9,18 @@ if (empty($_SESSION['login'])) {
 
 header('Content-Type: application/json; charset=utf-8');
 
+$now = time();
+$_SESSION['ai_rate_limit'] = array_values(array_filter(
+    $_SESSION['ai_rate_limit'] ?? [],
+    static fn($attemptTime) => is_int($attemptTime) && ($now - $attemptTime) < 60
+));
+if (count($_SESSION['ai_rate_limit']) >= 20) {
+    http_response_code(429);
+    echo json_encode(['error' => 'Too many AI requests. Please try again shortly.']);
+    exit();
+}
+$_SESSION['ai_rate_limit'][] = $now;
+
 $inputRaw = file_get_contents('php://input');
 $input = json_decode($inputRaw, true);
 
@@ -18,7 +30,12 @@ if (!$input || empty($input['prompt'])) {
     exit();
 }
 
-$apiKey = getenv('OPENAI_API_KEY') ?: 'YOUR_OPENAI_API_KEY';
+$apiKey = getenv('OPENAI_API_KEY');
+if (!$apiKey) {
+    http_response_code(500);
+    echo json_encode(['error' => 'AI service is not configured']);
+    exit();
+}
 
 $url = 'https://api.openai.com/v1/chat/completions';
 

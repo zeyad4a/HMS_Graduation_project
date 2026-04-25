@@ -4,7 +4,7 @@ if (!isset($_SESSION['uid'])) {
     header("location: /index.php"); exit();
 }
 
-$connect = new mysqli("localhost", "root", "", "hms");
+$connect = hms_db_connect();
 if ($connect->connect_error) die("Connection failed");
 
 $apid = intval($_GET['id'] ?? 0);

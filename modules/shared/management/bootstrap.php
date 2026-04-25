@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../../includes/audit.php';
 if (!function_exists('hms_management_connect')) {
     function hms_management_connect(): mysqli
     {
-        $connect = new mysqli("localhost", "root", "", "hms");
+        $connect = hms_db_connect();
         if ($connect->connect_error) {
             die("Connection failed: " . $connect->connect_error);
         }

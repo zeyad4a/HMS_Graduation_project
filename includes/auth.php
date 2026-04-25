@@ -1,6 +1,25 @@
 <?php
 date_default_timezone_set('Africa/Cairo');
+if (!defined('HMS_SKIP_AUTO_CONNECT')) {
+    define('HMS_SKIP_AUTO_CONNECT', true);
+}
+require_once __DIR__ . '/config.php';
+
+if (!headers_sent()) {
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-Content-Type-Options: nosniff');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header("Permissions-Policy: camera=(), microphone=(), geolocation=()");
+}
+
 if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
     session_start();
 }
 require_once __DIR__ . '/audit.php';
@@ -56,6 +75,22 @@ function hms_require_csrf(string $target = '/modules/dashboard.php'): void
     }
 }
 
+function hms_rate_limit(string $bucket, int $maxAttempts, int $windowSeconds): bool
+{
+    $now = time();
+    $_SESSION['rate_limits'][$bucket] = array_values(array_filter(
+        $_SESSION['rate_limits'][$bucket] ?? [],
+        static fn($attemptTime) => is_int($attemptTime) && ($now - $attemptTime) < $windowSeconds
+    ));
+
+    if (count($_SESSION['rate_limits'][$bucket]) >= $maxAttempts) {
+        return false;
+    }
+
+    $_SESSION['rate_limits'][$bucket][] = $now;
+    return true;
+}
+
 function hms_is_authorized_path(string $role, string $path): bool
 {
     if ($path === '/modules/dashboard.php') {
@@ -96,7 +131,7 @@ if (empty($_SESSION['logged_in']) || empty($_SESSION['login']) || empty($_SESSIO
 }
 
 $currentPath = parse_url($_SERVER['PHP_SELF'] ?? '', PHP_URL_PATH) ?: '';
-$auditConnect = @new mysqli("localhost", "root", "", "hms");
+$auditConnect = hms_db_connect(false);
 $auditEnabled = $auditConnect instanceof mysqli && !$auditConnect->connect_error;
 
 if ($auditEnabled) {

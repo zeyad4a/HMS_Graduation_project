@@ -1,6 +1,7 @@
 <?php
+define('HMS_SKIP_AUTO_CONNECT', true);
 require_once __DIR__ . '/../../includes/config.php';
-$connect = new mysqli("localhost", "root", "", "hms");
+$connect = hms_db_connect();
 
 // Auto-reschedule patients who are 15+ minutes late
 require_once __DIR__ . '/../../includes/auto-reschedule.php';

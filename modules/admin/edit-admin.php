@@ -4,27 +4,35 @@ if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'], ['Admin','Sys
     header("location: /index.php"); exit();
 }
 
-$connect = new mysqli("localhost", "root", "", "hms");
-if ($connect->connect_error) die("Connection failed");
+$connect = hms_db_connect();
 
 $apid   = intval($_GET['id']   ?? 0);
-$return = $_GET['from'] ?? 'admin-Reservations.php';
+$return = basename($_GET['from'] ?? 'admin-Reservations.php');
 
 // جلب بيانات الحجز
-$res = $connect->query("SELECT appointment.*, doctors.doctorName FROM appointment JOIN doctors ON doctors.id=appointment.doctorId WHERE apid=$apid");
+$stmt = $connect->prepare("SELECT appointment.*, doctors.doctorName FROM appointment JOIN doctors ON doctors.id=appointment.doctorId WHERE apid = ?");
+$stmt->bind_param("i", $apid);
+$stmt->execute();
+$res = $stmt->get_result();
 if ($res->num_rows === 0) {
     echo "<script>alert('Appointment not found!'); window.location.href='./$return';</script>"; exit();
 }
 $appt = $res->fetch_assoc();
+$stmt->close();
 
 $error = "";
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    hms_require_csrf('./' . $return);
+
     $newDate = $_POST['appointmentDate'] ?? '';
     $newTime = $_POST['appointmentTime'] ?? '';
     if (empty($newDate) || empty($newTime)) {
         $error = "Please fill all fields.";
     } else {
-        $connect->query("UPDATE appointment SET appointmentDate='$newDate', appointmentTime='$newTime' WHERE apid=$apid");
+        $update = $connect->prepare("UPDATE appointment SET appointmentDate = ?, appointmentTime = ? WHERE apid = ?");
+        $update->bind_param("ssi", $newDate, $newTime, $apid);
+        $update->execute();
+        $update->close();
         echo "<script>alert('Appointment updated successfully.'); window.location.href='./$return';</script>"; exit();
     }
 }
@@ -58,6 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 mb-4 text-sm"><?= $error ?></div>
   <?php endif; ?>
   <form method="POST">
+    <?= hms_csrf_field() ?>
     <div class="mb-4">
       <label class="block text-sm font-semibold text-gray-700 mb-1">New Date</label>
       <input type="date" name="appointmentDate" value="<?= htmlspecialchars($appt['appointmentDate']) ?>" required

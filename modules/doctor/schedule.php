@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../../includes/auth.php';
 
-$conn = new mysqli("localhost", "root", "", "hms");
+$conn = hms_db_connect();
 if ($conn->connect_error) {
     die("Connection failed");
 }

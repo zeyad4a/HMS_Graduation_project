@@ -2,10 +2,7 @@
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/notification-api.php';
 
-$conn = new mysqli("localhost", "root", "", "hms");
-if ($conn->connect_error) {
-    die("Connection failed");
-}
+$conn = hms_db_connect();
 $conn->set_charset("utf8mb4");
 
 $recipient = hms_get_notification_recipient();
@@ -14,6 +11,8 @@ $recipientId   = $recipient['id'];
 
 // Handle mark as read
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    hms_require_csrf('/includes/notifications.php');
+
     $postAction = $_POST['notif_action'] ?? '';
     
     if ($postAction === 'mark_read') {
@@ -265,6 +264,7 @@ $conn->close();
 
                         <?php if ($unreadCount > 0): ?>
                         <form method="POST" style="margin:0;">
+                            <?= hms_csrf_field() ?>
                             <input type="hidden" name="notif_action" value="mark_all_read">
                             <button type="submit" class="notif-mark-all">
                                 <i class="bi bi-check-all"></i> Mark all as read
@@ -324,6 +324,7 @@ $conn->close();
                                 </div>
                                 <?php if ($isUnread): ?>
                                 <form method="POST" style="margin:0;">
+                                    <?= hms_csrf_field() ?>
                                     <input type="hidden" name="notif_action" value="mark_read">
                                     <input type="hidden" name="notif_id" value="<?= (int)$notif['id'] ?>">
                                     <button type="submit" class="notif-read-btn" title="Mark as read">

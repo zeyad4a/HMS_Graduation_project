@@ -1,19 +1,17 @@
 <?php
 require_once __DIR__ . '/../../includes/auth.php';
 ini_set("display_errors", 0);
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "hms";
-$conn = new mysqli($servername, $username, $password, $dbname);
+$conn = hms_db_connect();
 
 if ($conn->connect_error) {
     die("ÙØ´Ù„ Ø§Ù„Ø§ØªØµØ§Ù„ Ø¨Ù‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª: " . $conn->connect_error);
 }
 
 if (isset($_POST['add'])) {
+    hms_require_csrf('/modules/super-admin/Add-Doctor.php');
+
     $name = trim($_POST['name'] ?? '');
-    $Role = trim($_POST['Role'] ?? 'Doctor');
+    $Role = 'Doctor';
     $specialization = trim($_POST['specialization'] ?? '');
     $price = trim($_POST['price'] ?? '');
     $email = trim($_POST['email'] ?? '');
@@ -80,6 +78,7 @@ if (isset($_POST['add'])) {
             <div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
 
                 <form action="#" method="POST" class="mx-auto max-w-xl sm:mt-20">
+                    <?= hms_csrf_field() ?>
                     <div class="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
 
                         <div class="sm:col-span-2">

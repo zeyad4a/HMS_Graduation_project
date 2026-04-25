@@ -4,7 +4,7 @@ require_once __DIR__ . '/../../includes/secure-token.php';
 
 require_once "../../includes/appointment-helpers.php";
 if (!isset($_SESSION['uid'])) { header("location: /index.php"); exit(); }
-$connect = new mysqli("localhost", "root", "", "hms");
+$connect = hms_db_connect();
 if ($connect->connect_error) die("Connection failed: " . $connect->connect_error);
 ?>
 <!DOCTYPE html>

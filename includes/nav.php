@@ -143,7 +143,7 @@ $userInitials = hms_nav_initials($displayName);
 
 // Notification badge count
 $_hmsNotifRecipient = hms_get_notification_recipient();
-$_hmsNotifConn = @new mysqli('localhost', 'root', '', 'hms');
+$_hmsNotifConn = hms_db_connect(false);
 $_hmsUnreadCount = 0;
 if ($_hmsNotifConn && !$_hmsNotifConn->connect_error) {
     $_hmsUnreadCount = hms_get_unread_count($_hmsNotifConn, $_hmsNotifRecipient['type'], $_hmsNotifRecipient['id']);

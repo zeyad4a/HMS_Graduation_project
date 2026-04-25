@@ -1,5 +1,7 @@
 <?php
 session_start();
+define('HMS_SKIP_AUTO_CONNECT', true);
+require_once __DIR__ . '/../../includes/config.php';
 header('Content-Type: application/json; charset=utf-8');
 
 if (empty($_SESSION['login']) || ($_SESSION['role'] ?? '') !== 'Doctor') {
@@ -8,8 +10,8 @@ if (empty($_SESSION['login']) || ($_SESSION['role'] ?? '') !== 'Doctor') {
     exit();
 }
 
-$connect = new mysqli("localhost", "root", "", "hms");
-if ($connect->connect_error) {
+$connect = hms_db_connect(false);
+if (!$connect) {
     http_response_code(500);
     echo json_encode(['error' => 'DB Connection Failed'], JSON_UNESCAPED_UNICODE);
     exit();

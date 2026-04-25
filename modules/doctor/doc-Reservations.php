@@ -3,7 +3,7 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/secure-token.php';
 require_once "../../includes/appointment-helpers.php";
 
-$connect = new mysqli("localhost", "root", "", "hms");
+$connect = hms_db_connect();
 if ($connect->connect_error) {
     die("Connection failed: " . $connect->connect_error);
 }

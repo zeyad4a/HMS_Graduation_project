@@ -6,15 +6,13 @@
  * 
  * Used by both employee (new_appoint.php) and patient (New-reservation.php) booking forms
  */
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . '/auth.php';
 
 header('Content-Type: application/json; charset=utf-8');
 date_default_timezone_set('Africa/Cairo');
 
-$conn = new mysqli("localhost", "root", "", "hms");
-if ($conn->connect_error) {
+$conn = hms_db_connect(false);
+if (!$conn) {
     echo json_encode(['available' => false, 'message' => 'DB error']);
     exit;
 }

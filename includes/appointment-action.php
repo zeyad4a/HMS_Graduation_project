@@ -6,7 +6,7 @@ if (!isset($_SESSION['logged_in'])) {
     exit();
 }
 
-$connect = new mysqli("localhost", "root", "", "hms");
+$connect = hms_db_connect();
 if ($connect->connect_error) {
     die("Connection failed");
 }

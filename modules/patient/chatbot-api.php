@@ -10,6 +10,18 @@ if (empty($_SESSION['login']) || ($_SESSION['role'] ?? '') !== 'Patient') {
 
 header('Content-Type: application/json; charset=utf-8');
 
+$now = time();
+$_SESSION['ai_rate_limit'] = array_values(array_filter(
+    $_SESSION['ai_rate_limit'] ?? [],
+    static fn($attemptTime) => is_int($attemptTime) && ($now - $attemptTime) < 60
+));
+if (count($_SESSION['ai_rate_limit']) >= 20) {
+    http_response_code(429);
+    echo json_encode(['error' => 'Too many AI requests. Please try again shortly.'], JSON_UNESCAPED_UNICODE);
+    exit();
+}
+$_SESSION['ai_rate_limit'][] = $now;
+
 // ── Parse input ──────────────────────────────────────────────────────────────
 $inputRaw = file_get_contents('php://input');
 $input = json_decode($inputRaw, true);
@@ -53,8 +65,10 @@ if ($isDiagnostic) {
 }
 
 // ── DB Connection ───────────────────────────────────────────────────────────
-$connect = new mysqli('localhost', 'root', '', 'hms');
-if ($connect->connect_error) {
+define('HMS_SKIP_AUTO_CONNECT', true);
+require_once __DIR__ . '/../../includes/config.php';
+$connect = hms_db_connect(false);
+if (!$connect) {
     http_response_code(500);
     echo json_encode(['error' => 'Database connection failed'], JSON_UNESCAPED_UNICODE);
     exit();
@@ -117,7 +131,12 @@ if ($hRes = $stmtH->get_result()->fetch_assoc()) { $latestHistory = $hRes; }
 
 $connect->close();
 
-$apiKey = getenv('OPENAI_API_KEY') ?: 'YOUR_OPENAI_API_KEY';
+$apiKey = getenv('OPENAI_API_KEY');
+if (!$apiKey) {
+    http_response_code(500);
+    echo json_encode(['error' => 'AI service is not configured'], JSON_UNESCAPED_UNICODE);
+    exit();
+}
 
 // ── Format Context ───────────────────────────────────────────────────────────
 $currentDate = date('Y-m-d');

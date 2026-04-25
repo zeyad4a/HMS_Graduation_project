@@ -4,7 +4,7 @@ require_once __DIR__ . '/../includes/secure-token.php';
 
 ini_set("display_errors", 0);
 
-$connect = new mysqli("localhost", "root", "", "hms");
+$connect = hms_db_connect();
 if ($connect->connect_error) {
     die("Connection failed: " . $connect->connect_error);
 }
