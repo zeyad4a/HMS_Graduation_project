@@ -5,8 +5,7 @@ require_once __DIR__ . '/../includes/secure-token.php';
  * med-record.php — صفحة Medical Record موحدة لكل الأدوار
  * بتعرض كل المرضى الفريدين: ID + Name + View (لبروفايل المريض)
  */
-ini_set("display_errors", 1);
-error_reporting(E_ALL);
+ini_set("display_errors", 0);
 
 $connect = new mysqli("localhost", "root", "", "hms");
 if ($connect->connect_error) die("Connection failed: " . $connect->connect_error);

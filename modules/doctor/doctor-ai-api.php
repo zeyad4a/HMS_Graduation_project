@@ -19,7 +19,7 @@ if (!$input || !$action) {
     exit();
 }
 
-$apiKey = 'YOUR_OPENAI_API_KEY';
+$apiKey = getenv('OPENAI_API_KEY') ?: 'YOUR_OPENAI_API_KEY';
 $url = 'https://api.openai.com/v1/chat/completions';
 
 // ── Action: generate_visit_note ──────────────────────────────────────────────
@@ -99,6 +99,20 @@ if ($action === 'summarize_history') {
         exit();
     }
     $connect->set_charset('utf8mb4');
+
+    $doctorId = (int)($_SESSION['id'] ?? 0);
+    $accessStmt = $connect->prepare("SELECT apid FROM appointment WHERE userId = ? AND doctorId = ? LIMIT 1");
+    $accessStmt->bind_param("ii", $patientId, $doctorId);
+    $accessStmt->execute();
+    $hasAccess = $accessStmt->get_result()->num_rows > 0;
+    $accessStmt->close();
+
+    if (!$hasAccess) {
+        $connect->close();
+        http_response_code(403);
+        echo json_encode(['error' => 'Access denied for this patient'], JSON_UNESCAPED_UNICODE);
+        exit();
+    }
 
     // Fetch all medical records
     $history = [];

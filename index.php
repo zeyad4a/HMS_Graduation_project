@@ -28,6 +28,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'login') {
         $result = $stmt->get_result();
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
+            session_regenerate_id(true);
             $_SESSION['logged_in'] = true;
             $_SESSION['role']      = 'Patient';
             $_SESSION['login']     = $identifier;
@@ -63,6 +64,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'login') {
         $result = $stmt->get_result();
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
+            session_regenerate_id(true);
             $_SESSION['logged_in'] = true;
             $_SESSION['role']      = 'Doctor';
             $_SESSION['login']     = $identifier;
@@ -100,6 +102,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'login') {
         if ($result->num_rows > 0) {
             $row  = $result->fetch_assoc();
             $date = date("Y-m-d");
+            session_regenerate_id(true);
             $_SESSION['logged_in'] = true;
             $_SESSION['role']      = $row['role'];
             $_SESSION['login']     = $identifier;

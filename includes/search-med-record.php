@@ -13,6 +13,12 @@ if ($connect->connect_error) die("Connection failed: " . $connect->connect_error
 
 $role = $_SESSION['role'] ?? '';
 $activePage = 'medical-record';
+
+if ($role === 'Patient') {
+    $uid = (int)($_SESSION['uid'] ?? 0);
+    header("Location: /includes/patient-profile.php?ref=" . urlencode(hms_encrypt_id($uid)));
+    exit();
+}
 ?>
 <!DOCTYPE html>
 <html lang="<?= $lang ?>" dir="<?= $dir ?>" data-theme="<?= $theme ?>">
@@ -72,6 +78,11 @@ $activePage = 'medical-record';
                     <tbody class="table-group-divider">
                         <?php
                         $search = trim($_POST['input'] ?? '');
+                        $whereExtraSql = '';
+                        if ($role === 'Doctor') {
+                            $docid = (int)($_SESSION['id'] ?? 0);
+                            $whereExtraSql = " AND appointment.doctorId = {$docid}";
+                        }
 
                         $stmt = $connect->prepare("
                             SELECT appointment.*, 
@@ -80,14 +91,17 @@ $activePage = 'medical-record';
                                    users.fullName as userFullName
                             FROM appointment
                             LEFT JOIN users ON users.uid = appointment.userId
-                            WHERE appointment.patient_Name LIKE ?
+                            WHERE (
+                               appointment.patient_Name LIKE ?
                                OR appointment.patient_Num LIKE ?
                                OR appointment.userId LIKE ?
                                OR appointment.apid LIKE ?
                                OR users.nat_id LIKE ?
                                OR users.PatientContno LIKE ?
                                OR users.fullName LIKE ?
-                            ORDER BY appointment.postingDate DESC
+                            )
+                            {$whereExtraSql}
+                             ORDER BY appointment.postingDate DESC
                         ");
 
                         $s = "%$search%";

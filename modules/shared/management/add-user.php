@@ -5,6 +5,8 @@ $pageTitle = $pageTitle ?? 'Add New User';
 $roleOptions = $roleOptions ?? ['System Admin', 'Admin', 'User'];
 
 if (isset($_POST['Add'])) {
+    hms_require_csrf(hms_management_current_path());
+
     $name = trim($_POST['name'] ?? '');
     $role = trim($_POST['Role'] ?? '');
     $email = trim($_POST['email'] ?? '');
@@ -85,6 +87,7 @@ if (isset($_POST['Add'])) {
         <main>
             <div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
                 <form action="<?= htmlspecialchars(hms_management_current_path()) ?>" method="POST" class="mx-auto max-w-xl sm:mt-20">
+                    <?= hms_csrf_field() ?>
                     <div class="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
                         <div class="sm:col-span-2">
                             <label for="name" class="block text-sm font-semibold leading-6 text-gray-900">User name</label>

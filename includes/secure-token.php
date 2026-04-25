@@ -10,7 +10,23 @@
 
 if (!defined('HMS_TOKEN_SECRET')) {
     // Secret key for encryption — unique to this installation
-    define('HMS_TOKEN_SECRET', 'EchoHMS_2026_S3cur3_T0k3n_K3y!@#');
+    define('HMS_TOKEN_SECRET', getenv('HMS_TOKEN_SECRET') ?: 'EchoHMS_2026_S3cur3_T0k3n_K3y!@#');
+}
+
+if (!function_exists('hms_token_base64url_encode')) {
+    function hms_token_base64url_encode(string $value): string
+    {
+        return rtrim(strtr(base64_encode($value), '+/', '-_'), '=');
+    }
+}
+
+if (!function_exists('hms_token_base64url_decode')) {
+    function hms_token_base64url_decode(string $value): string|false
+    {
+        $padded = strtr($value, '-_', '+/');
+        $padded .= str_repeat('=', (4 - strlen($padded) % 4) % 4);
+        return base64_decode($padded, true);
+    }
 }
 
 if (!function_exists('hms_encrypt_id')) {
@@ -21,19 +37,21 @@ if (!function_exists('hms_encrypt_id')) {
      */
     function hms_encrypt_id(int $id): string
     {
-        $method = 'aes-128-cbc';
-        $key = substr(hash('sha256', HMS_TOKEN_SECRET), 0, 16);
-        $iv = substr(hash('sha256', HMS_TOKEN_SECRET . '_iv'), 0, 16);
+        $method = 'aes-256-cbc';
+        $key = hash('sha256', HMS_TOKEN_SECRET, true);
+        $iv = random_bytes(openssl_cipher_iv_length($method));
         
         // Add a timestamp to make each token unique even for the same ID
         $payload = json_encode(['id' => $id, 't' => time()]);
         
-        $encrypted = openssl_encrypt($payload, $method, $key, 0, $iv);
+        $encrypted = openssl_encrypt($payload, $method, $key, OPENSSL_RAW_DATA, $iv);
+        if ($encrypted === false) {
+            return '';
+        }
         
-        // Make it URL-safe: replace +/= with -_~
-        $urlSafe = strtr($encrypted, '+/=', '-_~');
+        $mac = hash_hmac('sha256', $iv . $encrypted, $key, true);
         
-        return $urlSafe;
+        return 'v2.' . hms_token_base64url_encode($iv . $mac . $encrypted);
     }
 }
 
@@ -45,14 +63,36 @@ if (!function_exists('hms_decrypt_id')) {
      */
     function hms_decrypt_id(string $token): ?int
     {
-        $method = 'aes-128-cbc';
-        $key = substr(hash('sha256', HMS_TOKEN_SECRET), 0, 16);
-        $iv = substr(hash('sha256', HMS_TOKEN_SECRET . '_iv'), 0, 16);
+        if (str_starts_with($token, 'v2.')) {
+            $method = 'aes-256-cbc';
+            $key = hash('sha256', HMS_TOKEN_SECRET, true);
+            $raw = hms_token_base64url_decode(substr($token, 3));
+            $ivLength = openssl_cipher_iv_length($method);
+
+            if ($raw === false || strlen($raw) <= ($ivLength + 32)) {
+                return null;
+            }
+
+            $iv = substr($raw, 0, $ivLength);
+            $mac = substr($raw, $ivLength, 32);
+            $encrypted = substr($raw, $ivLength + 32);
+            $expectedMac = hash_hmac('sha256', $iv . $encrypted, $key, true);
+
+            if (!hash_equals($expectedMac, $mac)) {
+                return null;
+            }
+
+            $decrypted = openssl_decrypt($encrypted, $method, $key, OPENSSL_RAW_DATA, $iv);
+        } else {
+            $method = 'aes-128-cbc';
+            $key = substr(hash('sha256', HMS_TOKEN_SECRET), 0, 16);
+            $iv = substr(hash('sha256', HMS_TOKEN_SECRET . '_iv'), 0, 16);
         
-        // Reverse URL-safe encoding
-        $base64 = strtr($token, '-_~', '+/=');
+            // Reverse URL-safe encoding
+            $base64 = strtr($token, '-_~', '+/=');
         
-        $decrypted = openssl_decrypt($base64, $method, $key, 0, $iv);
+            $decrypted = openssl_decrypt($base64, $method, $key, 0, $iv);
+        }
         
         if ($decrypted === false) {
             return null; // Tampered or invalid token

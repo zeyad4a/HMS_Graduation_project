@@ -28,6 +28,11 @@ if ($doctorId < 1) {
 }
 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
+$mutatingActions = ['save_schedule', 'add_override', 'delete_override'];
+if (in_array($action, $mutatingActions, true) && !hms_validate_csrf($_POST['csrf_token'] ?? $_GET['csrf_token'] ?? '')) {
+    echo json_encode(['success' => false, 'message' => 'Security check failed']);
+    exit;
+}
 
 // ============================================================
 // ACTION: get_schedule — Load current weekly schedule

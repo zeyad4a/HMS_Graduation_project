@@ -56,6 +56,8 @@ if ($role === 'Patient') {
 }
 
 if ($action === 'cancel') {
+    hms_require_csrf($return);
+
     if (!$canCancel) {
         hms_redirect_with_popup('Permission denied.', $return);
     }
@@ -155,6 +157,8 @@ $error = '';
 $isPrivileged = in_array($role, ['Admin', 'System Admin'], true);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    hms_require_csrf($return);
+
     $newDate = trim($_POST['appointmentDate'] ?? '');
     $newTime = trim($_POST['appointmentTime'] ?? '');
     $newDocId = intval($_POST['doctorId'] ?? 0);
@@ -300,6 +304,7 @@ $specs = $connect->query("SELECT specilization FROM doctorspecilization ORDER BY
         <?php endif; ?>
 
         <form method="POST">
+            <?= hms_csrf_field() ?>
             <div class="mb-4">
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Specialization</label>
                 <select id="sel_spec" class="w-full border-2 border-gray-200 rounded-lg px-4 py-2 text-gray-800 focus:border-blue-500 focus:outline-none">

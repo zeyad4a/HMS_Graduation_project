@@ -18,7 +18,7 @@ if (!$input || empty($input['prompt'])) {
     exit();
 }
 
-$apiKey = 'YOUR_OPENAI_API_KEY';
+$apiKey = getenv('OPENAI_API_KEY') ?: 'YOUR_OPENAI_API_KEY';
 
 $url = 'https://api.openai.com/v1/chat/completions';
 

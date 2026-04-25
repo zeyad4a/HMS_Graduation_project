@@ -15,6 +15,8 @@ if ($connect->connect_error) {
     exit();
 }
 
+$doctorId = (int)($_SESSION['id'] ?? 0);
+
 $input = json_decode(file_get_contents('php://input'), true);
 $apid = (int)($input['apid'] ?? 0);
 $action = $input['action'] ?? ''; // 'update_status', 'update_priority'
@@ -22,6 +24,12 @@ $value = $input['value'] ?? '';
 
 if (!$apid || !$action) {
     echo json_encode(['error' => 'Missing parameters'], JSON_UNESCAPED_UNICODE);
+    exit();
+}
+
+if (!hms_validate_csrf($input['csrf_token'] ?? '')) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Security check failed'], JSON_UNESCAPED_UNICODE);
     exit();
 }
 
@@ -33,11 +41,18 @@ if ($action === 'update_status') {
     }
 
     // Check current status to prevent reverting
-    $checkStmt = $connect->prepare("SELECT patient_status FROM appointment WHERE apid = ?");
-    $checkStmt->bind_param("i", $apid);
+    $checkStmt = $connect->prepare("SELECT patient_status FROM appointment WHERE apid = ? AND doctorId = ?");
+    $checkStmt->bind_param("ii", $apid, $doctorId);
     $checkStmt->execute();
-    $currentStatus = $checkStmt->get_result()->fetch_assoc()['patient_status'] ?? 'waiting';
+    $currentRow = $checkStmt->get_result()->fetch_assoc();
     $checkStmt->close();
+
+    if (!$currentRow) {
+        echo json_encode(['error' => 'Appointment not found or access denied'], JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
+    $currentStatus = $currentRow['patient_status'] ?? 'waiting';
 
     // Logic: 
     // 1. If Done, no more changes
@@ -51,15 +66,15 @@ if ($action === 'update_status') {
         exit();
     }
 
-    $stmt = $connect->prepare("UPDATE appointment SET patient_status = ? WHERE apid = ?");
-    $stmt->bind_param("si", $value, $apid);
+    $stmt = $connect->prepare("UPDATE appointment SET patient_status = ? WHERE apid = ? AND doctorId = ?");
+    $stmt->bind_param("sii", $value, $apid, $doctorId);
     if ($stmt->execute()) {
         // Send notification to the patient if they have a registered account
         $apptStmt = $connect->prepare("SELECT a.userId, a.patient_Name, a.appointmentTime, a.doctorId, d.doctorName
                                         FROM appointment a
                                         JOIN doctors d ON d.id = a.doctorId
-                                        WHERE a.apid = ?");
-        $apptStmt->bind_param("i", $apid);
+                                        WHERE a.apid = ? AND a.doctorId = ?");
+        $apptStmt->bind_param("ii", $apid, $doctorId);
         $apptStmt->execute();
         $apptRow = $apptStmt->get_result()->fetch_assoc();
         $apptStmt->close();
@@ -125,19 +140,26 @@ if ($action === 'update_status') {
     }
 
     // Check current status to prevent priority change after starting/finishing
-    $checkStmt = $connect->prepare("SELECT patient_status FROM appointment WHERE apid = ?");
-    $checkStmt->bind_param("i", $apid);
+    $checkStmt = $connect->prepare("SELECT patient_status FROM appointment WHERE apid = ? AND doctorId = ?");
+    $checkStmt->bind_param("ii", $apid, $doctorId);
     $checkStmt->execute();
-    $currentStatus = $checkStmt->get_result()->fetch_assoc()['patient_status'] ?? 'waiting';
+    $currentRow = $checkStmt->get_result()->fetch_assoc();
     $checkStmt->close();
+
+    if (!$currentRow) {
+        echo json_encode(['error' => 'Appointment not found or access denied'], JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
+    $currentStatus = $currentRow['patient_status'] ?? 'waiting';
 
     if (in_array($currentStatus, ['in progress', 'done'])) {
         echo json_encode(['error' => 'لا يمكن تغيير درجة الأولوية بعد بدء الكشف أو انتهائه.'], JSON_UNESCAPED_UNICODE);
         exit();
     }
 
-    $stmt = $connect->prepare("UPDATE appointment SET priority = ? WHERE apid = ?");
-    $stmt->bind_param("si", $value, $apid);
+    $stmt = $connect->prepare("UPDATE appointment SET priority = ? WHERE apid = ? AND doctorId = ?");
+    $stmt->bind_param("sii", $value, $apid, $doctorId);
     if ($stmt->execute()) {
         echo json_encode(['success' => true]);
     } else {

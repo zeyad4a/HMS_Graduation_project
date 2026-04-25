@@ -103,6 +103,20 @@ if (!$patient) {
     exit();
 }
 
+if ($role === 'Doctor') {
+    $docid = (int)($_SESSION['id'] ?? 0);
+    $accessStmt = $connect->prepare("SELECT apid FROM appointment WHERE userId = ? AND doctorId = ? LIMIT 1");
+    $accessStmt->bind_param("ii", $uid, $docid);
+    $accessStmt->execute();
+    $hasAccess = $accessStmt->get_result()->num_rows > 0;
+    $accessStmt->close();
+
+    if (!$hasAccess) {
+        header("Location: /includes/med-record.php");
+        exit();
+    }
+}
+
 $reportsSql = mysqli_query(
     $connect,
     "SELECT

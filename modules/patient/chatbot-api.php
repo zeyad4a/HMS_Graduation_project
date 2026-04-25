@@ -117,6 +117,8 @@ if ($hRes = $stmtH->get_result()->fetch_assoc()) { $latestHistory = $hRes; }
 
 $connect->close();
 
+$apiKey = getenv('OPENAI_API_KEY') ?: 'YOUR_OPENAI_API_KEY';
+
 // ── Format Context ───────────────────────────────────────────────────────────
 $currentDate = date('Y-m-d');
 $currentTime = date('g:i A');
@@ -171,7 +173,7 @@ $payload = json_encode(['model' => 'gpt-4o-mini', 'messages' => $messages, 'temp
 $ch = curl_init('https://api.openai.com/v1/chat/completions');
 curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true, CURLOPT_POST => true, CURLOPT_POSTFIELDS => $payload,
-    CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Authorization: Bearer YOUR_OPENAI_API_KEY'],
+    CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Authorization: Bearer ' . $apiKey],
     CURLOPT_TIMEOUT => 30,
 ]);
 $response = curl_exec($ch);

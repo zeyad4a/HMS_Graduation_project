@@ -5,7 +5,9 @@ $connect = new mysqli("localhost", "root", "", "hms");
 if ($connect->connect_error) die("Connection failed");
 
 $apid    = intval($_GET['id']   ?? 0);
-$return  = $_GET['from'] ?? 'admin-Reservations.php';
+$return  = basename($_GET['from'] ?? 'admin-Reservations.php');
+
+hms_require_csrf('./' . $return);
 
 // تحقق إن الحجز موجود
 $res = $connect->query("SELECT apid, userStatus FROM appointment WHERE apid=$apid");

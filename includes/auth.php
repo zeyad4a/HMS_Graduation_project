@@ -22,10 +22,50 @@ function hms_redirect_with_popup(string $message, string $target = '/index.php')
     exit();
 }
 
+function hms_csrf_token(): string
+{
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+
+    return $_SESSION['csrf_token'];
+}
+
+function hms_csrf_field(): string
+{
+    return '<input type="hidden" name="csrf_token" value="' . htmlspecialchars(hms_csrf_token(), ENT_QUOTES, 'UTF-8') . '">';
+}
+
+function hms_csrf_query(): string
+{
+    return 'csrf_token=' . urlencode(hms_csrf_token());
+}
+
+function hms_validate_csrf(?string $token = null): bool
+{
+    $token = $token ?? ($_POST['csrf_token'] ?? $_GET['csrf_token'] ?? '');
+    return is_string($token)
+        && isset($_SESSION['csrf_token'])
+        && hash_equals($_SESSION['csrf_token'], $token);
+}
+
+function hms_require_csrf(string $target = '/modules/dashboard.php'): void
+{
+    if (!hms_validate_csrf()) {
+        hms_redirect_with_popup('Security check failed. Please try again.', $target);
+    }
+}
+
 function hms_is_authorized_path(string $role, string $path): bool
 {
     if ($path === '/modules/dashboard.php') {
         return true;
+    }
+
+    // Shared management files are partials. They must be reached through
+    // the role-specific admin/super-admin wrappers, not directly.
+    if (str_starts_with($path, '/modules/shared/management/')) {
+        return false;
     }
 
     // Shared module and includes pages are accessible to all logged-in users

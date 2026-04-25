@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/notification-api.php';
-ini_set("display_errors", 1);
+ini_set("display_errors", 0);
 
 $servername = "localhost";
 $username   = "root";
@@ -14,6 +14,8 @@ if ($conn->connect_error) {
 }
 
 if (isset($_POST['Save'])) {
+    hms_require_csrf('/modules/user/new_appoint.php');
+
     $name           = trim($_POST['name'] ?? '');
     $phnumber       = trim($_POST['phnumber'] ?? '');
     $natid          = trim($_POST['natid'] ?? '');
@@ -467,6 +469,7 @@ if (isset($_POST['Save'])) {
         <main>
             <div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
                 <form method="post">
+                    <?= hms_csrf_field() ?>
                     <div class="space-y-12">
                         <div class="border-b border-gray-900/10 pb-12">
                             <div class="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">

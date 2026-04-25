@@ -16,9 +16,11 @@ if ($conn->connect_error) {
 
 
 if (isset($_POST['Save'])) {
+    hms_require_csrf('/modules/patient/New-reservation.php');
+
     $specilization = $_POST['specialization'];
-    $doctorid = $_POST['Doctor'];
-    $userid = $_SESSION['uid'];
+    $doctorid = (int)$_POST['Doctor'];
+    $userid = (int)$_SESSION['uid'];
     $username = $_SESSION['username'];
     $fees = $_POST['price'];
     $appdate = $_POST['Date'];
@@ -43,11 +45,11 @@ if (isset($_POST['Save'])) {
             exit;
         }
 
-        $query = mysqli_query(
-        $conn,
-        "insert into appointment(doctorSpecialization,doctorId,userId,patient_Name,consultancyFees,appointmentDate,appointmentTime,userStatus,doctorStatus)
-                      values('$specilization','$doctorid','$userid','$username','$fees','$appdate','$time','$userstatus','$docstatus')"
-    );
+        $insertStmt = $conn->prepare("INSERT INTO appointment(doctorSpecialization,doctorId,userId,patient_Name,consultancyFees,appointmentDate,appointmentTime,userStatus,doctorStatus)
+                      VALUES(?,?,?,?,?,?,?,?,?)");
+        $insertStmt->bind_param("siissssii", $specilization, $doctorid, $userid, $username, $fees, $appdate, $time, $userstatus, $docstatus);
+        $query = $insertStmt->execute();
+        $insertStmt->close();
     if ($query) {
         $newApptId = mysqli_insert_id($conn);
 
@@ -343,6 +345,7 @@ if (isset($_POST['Save'])) {
             <div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
 
                 <form action="#" method="POST" class="mx-auto max-w-xl sm:mt-20">
+                    <?= hms_csrf_field() ?>
                     <div class="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
 
 

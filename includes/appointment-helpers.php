@@ -76,6 +76,7 @@ function appt_action_buttons(array $row, string $returnUrl): string
 
     $base = '/includes/appointment-action.php';
     $ret = urlencode($returnUrl);
+    $csrf = hms_csrf_query();
     $html = '<div class="flex gap-1 justify-center flex-wrap">';
 
     if ($role === 'Patient') {
@@ -84,14 +85,14 @@ function appt_action_buttons(array $row, string $returnUrl): string
                 class='inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20 hover:bg-blue-100'>
                 <i class='bi bi-pencil me-1'></i>Edit</a>";
 
-            $html .= "<a href='{$base}?action=cancel&id={$apid}&return={$ret}'
+            $html .= "<a href='{$base}?action=cancel&id={$apid}&return={$ret}&{$csrf}'
                 class='inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20 hover:bg-red-100'
                 onclick=\"return confirm('Cancel this appointment?');\">
                 <i class='bi bi-x-circle me-1'></i>Cancel</a>";
         }
     } elseif ($role === 'Doctor') {
         if ($isActive) {
-            $html .= "<a href='{$base}?action=cancel&id={$apid}&return={$ret}'
+            $html .= "<a href='{$base}?action=cancel&id={$apid}&return={$ret}&{$csrf}'
                 class='inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20 hover:bg-red-100'
                 onclick=\"return confirm('Cancel this appointment?');\">
                 <i class='bi bi-x-circle me-1'></i>Cancel</a>";
@@ -102,7 +103,7 @@ function appt_action_buttons(array $row, string $returnUrl): string
                 class='inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20 hover:bg-blue-100'>
                 <i class='bi bi-pencil me-1'></i>Edit</a>";
 
-            $html .= "<a href='{$base}?action=cancel&id={$apid}&return={$ret}'
+            $html .= "<a href='{$base}?action=cancel&id={$apid}&return={$ret}&{$csrf}'
                 class='inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20 hover:bg-red-100'
                 onclick=\"return confirm('Cancel this appointment?');\">
                 <i class='bi bi-x-circle me-1'></i>Cancel</a>";

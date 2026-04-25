@@ -80,6 +80,9 @@ $activePage = 'reservations';
                         if ($role === 'Doctor') {
                             $docid = intval($_SESSION['id'] ?? 0);
                             $whereExtra = "AND appointment.doctorId = '$docid'";
+                        } elseif ($role === 'Patient') {
+                            $uid = intval($_SESSION['uid'] ?? 0);
+                            $whereExtra = "AND appointment.userId = '$uid'";
                         }
 
                         $ret = mysqli_query($connect, "SELECT appointment.*, doctors.doctorName, users.nat_id, users.PatientContno, users.fullName as userFullName FROM appointment

@@ -8,6 +8,8 @@ $paymentsPath = $paymentsPath ?? hms_management_sibling_path('admin-Payments.php
 $connect = hms_management_connect();
 
 if ($showDeleteAction && isset($_GET['cancel'])) {
+    hms_require_csrf(hms_management_current_path());
+
     $employeeId = intval($_GET['id'] ?? 0);
     if ($employeeId > 0) {
         $employeeResult = mysqli_query($connect, "SELECT id, username, role, email FROM employ WHERE id = {$employeeId}");
@@ -101,7 +103,7 @@ $employees = mysqli_query($connect, "SELECT * FROM employ GROUP BY id");
                                     </th>
                                     <th><p class="text-lg font-bold text-gray-900 text-center"><a href="<?= htmlspecialchars($paymentsPath) ?>?employId=<?= (int)$row['id'] ?>" class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-lg font-medium text-green-700 ring-1 ring-inset ring-green-600/20">View</a></p></th>
                                     <?php if ($showDeleteAction): ?>
-                                        <th><p class="text-lg font-bold text-gray-900 text-center"><a href="<?= htmlspecialchars(hms_management_current_path()) ?>?id=<?= (int)$row['id'] ?>&cancel=1" onClick="return confirm('Are You Sure You Want To Delete ?');" class="text-lg inline-flex items-center rounded-md bg-green-50 px-2 py-1 font-medium text-red-700 ring-1 ring-inset ring-red-600/20">Delete</a></p></th>
+                                        <th><p class="text-lg font-bold text-gray-900 text-center"><a href="<?= htmlspecialchars(hms_management_current_path()) ?>?id=<?= (int)$row['id'] ?>&cancel=1&<?= hms_csrf_query() ?>" onClick="return confirm('Are You Sure You Want To Delete ?');" class="text-lg inline-flex items-center rounded-md bg-green-50 px-2 py-1 font-medium text-red-700 ring-1 ring-inset ring-red-600/20">Delete</a></p></th>
                                     <?php endif; ?>
                                 </tr>
                             <?php endwhile; ?>

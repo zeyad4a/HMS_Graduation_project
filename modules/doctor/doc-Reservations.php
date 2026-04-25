@@ -207,12 +207,14 @@ hms_check_late_patients($connect);
     </div>
 
     <script>
+    const HMS_CSRF_TOKEN = '<?= htmlspecialchars(hms_csrf_token(), ENT_QUOTES, 'UTF-8') ?>';
+
     async function updateStatus(apid, status) {
         try {
             const res = await fetch('./queue-api.php', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ action: 'update_status', apid: apid, value: status })
+                body: JSON.stringify({ action: 'update_status', apid: apid, value: status, csrf_token: HMS_CSRF_TOKEN })
             });
             const data = await res.json();
             if (data.success) location.reload();
@@ -225,7 +227,7 @@ hms_check_late_patients($connect);
             const res = await fetch('./queue-api.php', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ action: 'update_priority', apid: apid, value: priority })
+                body: JSON.stringify({ action: 'update_priority', apid: apid, value: priority, csrf_token: HMS_CSRF_TOKEN })
             });
             const data = await res.json();
             if (data.success) location.reload();

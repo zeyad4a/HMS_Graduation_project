@@ -371,6 +371,7 @@ $doctorName = $_SESSION['username'] ?? 'Doctor';
 
     <script>
         const API_URL = '/modules/doctor/schedule-api.php';
+        const HMS_CSRF_TOKEN = '<?= htmlspecialchars(hms_csrf_token(), ENT_QUOTES, 'UTF-8') ?>';
         const DAY_NAMES = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
         const DAY_ICONS = ['bi-calendar', 'bi-calendar', 'bi-calendar', 'bi-calendar', 'bi-calendar', 'bi-calendar', 'bi-calendar'];
         let currentSchedule = {};
@@ -481,6 +482,7 @@ $doctorName = $_SESSION['username'] ?? 'Doctor';
 
             const form = new FormData();
             form.append('action', 'save_schedule');
+            form.append('csrf_token', HMS_CSRF_TOKEN);
             form.append('days', JSON.stringify(days));
 
             try {
@@ -547,6 +549,7 @@ $doctorName = $_SESSION['username'] ?? 'Doctor';
 
             const form = new FormData();
             form.append('action', 'add_override');
+            form.append('csrf_token', HMS_CSRF_TOKEN);
             form.append('override_date', ovDate);
             form.append('status', ovStatus);
             form.append('start_time', ovStart);
@@ -573,6 +576,7 @@ $doctorName = $_SESSION['username'] ?? 'Doctor';
             if (!confirm('Remove this override?')) return;
             const form = new FormData();
             form.append('action', 'delete_override');
+            form.append('csrf_token', HMS_CSRF_TOKEN);
             form.append('override_id', id);
             try {
                 const resp = await fetch(API_URL, { method: 'POST', body: form });

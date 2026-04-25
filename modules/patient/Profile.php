@@ -83,6 +83,8 @@ function hms_fetch_one(mysqli_stmt $stmt): ?array
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['Save'])) {
+    hms_require_csrf('/modules/patient/Profile.php');
+
     $fullName = trim((string)($_POST['User-name'] ?? ''));
     $phone = trim((string)($_POST['Phone'] ?? ''));
     $nat_id = trim((string)($_POST['nat_id'] ?? ''));
@@ -263,6 +265,7 @@ $bloodSugar         = hms_text($lastReport['BloodSugar'] ?? '', '-');
                 </div>
 
                 <form method="post" class="grid gap-5 md:grid-cols-2">
+                    <?= hms_csrf_field() ?>
                     <div class="md:col-span-2">
                         <label for="User-name" class="mb-2 block text-sm font-semibold text-slate-700">Full Name</label>
                         <input

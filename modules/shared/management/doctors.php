@@ -7,6 +7,8 @@ $showDeleteAction = $showDeleteAction ?? false;
 $connect = hms_management_connect();
 
 if ($showDeleteAction && isset($_GET['cancel'])) {
+    hms_require_csrf(hms_management_current_path());
+
     $doctorId = intval($_GET['id'] ?? 0);
     if ($doctorId > 0) {
         $doctorResult = mysqli_query($connect, "SELECT id, doctorName, specilization, docEmail FROM doctors WHERE id = {$doctorId}");
@@ -98,7 +100,7 @@ $doctors = mysqli_query($connect, "SELECT DISTINCT * FROM doctors ORDER BY statu
                                         </p>
                                     </th>
                                     <?php if ($showDeleteAction): ?>
-                                        <th><p class="text-lg font-bold text-gray-900 text-center"><a href="<?= htmlspecialchars(hms_management_current_path()) ?>?id=<?= (int)$row['id'] ?>&cancel=1" onClick="return confirm('Are You Sure You Want To Delete ?');" class="text-lg inline-flex items-center rounded-md bg-green-50 px-2 py-1 font-medium text-red-700 ring-1 ring-inset ring-red-600/20">Delete</a></p></th>
+                                        <th><p class="text-lg font-bold text-gray-900 text-center"><a href="<?= htmlspecialchars(hms_management_current_path()) ?>?id=<?= (int)$row['id'] ?>&cancel=1&<?= hms_csrf_query() ?>" onClick="return confirm('Are You Sure You Want To Delete ?');" class="text-lg inline-flex items-center rounded-md bg-green-50 px-2 py-1 font-medium text-red-700 ring-1 ring-inset ring-red-600/20">Delete</a></p></th>
                                     <?php endif; ?>
                                 </tr>
                             <?php endwhile; ?>

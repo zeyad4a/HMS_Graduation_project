@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/secure-token.php';
-ini_set("display_errors", 1);
+ini_set("display_errors", 0);
 
 $connect = new mysqli("localhost", "root", "", "hms");
 if ($connect->connect_error) {
@@ -41,6 +41,8 @@ if ($id !== null) {
 }
 
 if (isset($_POST['submit'])) {
+  hms_require_csrf('./doc-Reservations.php');
+
   $Patient_ID  = intval($_POST['Patient_ID']);
   $apid        = intval($_POST['apid']);
   $docid       = intval($_SESSION['id']);
@@ -143,6 +145,7 @@ if (isset($_POST['submit'])) {
           ?>
 
           <form method="post" action="./doc-write.php?ref=<?= urlencode(hms_encrypt_id($id)) ?><?= $isEdit ? '&edit=1' : '' ?>" class="mx-auto max-w-full mt-10">
+            <?= hms_csrf_field() ?>
 
             <input type="hidden" name="apid" value="<?php echo $row['apid']; ?>">
             <input type="hidden" name="Patient_ID" value="<?php echo $row['userId']; ?>">
